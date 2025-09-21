@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Examen - Patología Genital Femenina</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .header {
+            background-color: #3498db;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .student-info {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .exam-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        select, button {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .question-container {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        .options {
+            margin-top: 20px;
+        }
+        .option {
+            padding: 12px 15px;
+            margin: 10px 0;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option:hover {
+            background-color: #e9ecef;
+        }
+        .option.selected {
+            background-color: #d4e6f1;
+            border-color: #3498db;
+        }
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        .explanation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            border-radius: 5px;
+            display: none;
+        }
+        .progress-container {
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 20px;
+            background-color: #3498db;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .progress-text {
+            text-align: center;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .results {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: none;
+        }
+        .results h3 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .retry-btn {
+            background-color: #f39c12;
+        }
+        .retry-btn:hover {
+            background-color: #e67e22;
+        }
+        .exit-btn {
+            background-color: #e74c3c;
+        }
+        .exit-btn:hover {
+            background-color: #c0392b;
+        }
+        @media (max-width: 768px) {
+            .exam-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Simulador de Examen: Patología del Aparato Genital Femenino</h1>
+        <p>Unidades: Infecciones, Vulva, Vagina</p>
+    </div>
+
+    <div class="student-info" id="initial-screen">
+        <h2>Información del Estudiante</h2>
+        <div>
+            <label for="student-name">Nombre o Correo Electrónico:</label><br>
+            <input type="text" id="student-name" placeholder="Ingresa tu nombre o correo" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+        </div>
+        <div class="exam-controls">
+            <select id="unit-selector">
+                <option value="">-- Selecciona una Unidad --</option>
+                <option value="infecciones">Infecciones del Aparato Genital Femenino</option>
+                <option value="vulva">Vulva</option>
+                <option value="vagina">Vagina</option>
+            </select>
+            <select id="mode-selector">
+                <option value="practice">Modo Práctica (Feedback Inmediato)</option>
+                <option value="exam">Modo Examen (Resultado Final)</option>
+            </select>
+            <button id="start-btn">Iniciar Examen</button>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-text" id="progress-text">0/0 preguntas completadas</div>
+
+    <div id="question-container" class="question-container">
+        <h3 id="question-number">Pregunta 1</h3>
+        <p id="question-text">Texto de la pregunta</p>
+        <div class="options" id="options-container">
+            <!-- Las opciones se generarán dinámicamente -->
+        </div>
+        <div class="explanation" id="explanation">
+            <!-- La explicación aparecerá aquí -->
+        </div>
+        <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+            <button id="prev-btn">Anterior</button>
+            <button id="next-btn">Siguiente</button>
+            <button id="submit-btn" style="display: none;">Enviar Respuestas</button>
+        </div>
+    </div>
+
+    <div class="results" id="results-container">
+        <h3>Resultados del Examen</h3>
+        <p><strong>Estudiante:</strong> <span id="result-student-name"></span></p>
+        <p><strong>Unidad:</strong> <span id="result-unit"></span></p>
+        <p><strong>Modo:</strong> <span id="result-mode"></span></p>
+        <p><strong>Calificación:</strong> <span id="result-score"></span></p>
+        <p><strong>Preguntas correctas:</strong> <span id="correct-count"></span> de 20</p>
+        <div id="review-section" style="margin-top: 20px;">
+            <h4>Revisión de respuestas:</h4>
+            <div id="review-answers">
+                <!-- Las respuestas se mostrarán aquí -->
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button class="retry-btn" id="retry-btn">Reintentar</button>
+            <button class="exit-btn" id="exit-btn">Salir del Cuestionario</button>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ CONFIGURACIÓN: URL de Google Apps Script (YA INTEGRADA)
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbz-7YnQ6-VsalQ6duOP3qrJgAYRFSlWGLYwfecW9KO9mMw7MvwaL1GKSEQzPz_fvJHuiA/exec';
+
+        // Banco de preguntas por unidad
+        const questionBank = {
+            infecciones: [
+                {
+                    question: "¿Cuál de los siguientes virus es la causa principal de úlceras genitales dolorosas?",
+                    options: [
+                        "Virus del papiloma humano (VPH)",
+                        "Virus del herpes simple (VHS)",
+                        "Citomegalovirus",
+                        "Virus de Epstein-Barr"
+                    ],
+                    correct: 1,
+                    explanation: "El virus del herpes simple (VHS), especialmente el tipo 2, es la causa principal de úlceras genitales dolorosas. Las lesiones iniciales suelen corresponder a pápulas rojas que progresan a vesículas y después a úlceras fusionadas y dolorosas."
+                },
+                {
+                    question: "¿Qué porcentaje aproximado de mujeres menores de 40 años son seropositivas para los anticuerpos anti-VHS-2?",
+                    options: [
+                        "5%",
+                        "15%",
+                        "30%",
+                        "50%"
+                    ],
+                    correct: 2,
+                    explanation: "Antes de los 40 años, cerca del 30% de las mujeres son seropositivas para los anticuerpos anti-VHS-2, lo que indica exposición previa al virus del herpes simple tipo 2."
+                },
+                {
+                    question: "En el frotis cervical de una infección por VHS, ¿qué característica citopática es típica?",
+                    options: [
+                        "Células con citoplasma vacuolado",
+                        "Células multinucleadas con inclusiones intranucleares con aspecto de 'vidrio esmerilado'",
+                        "Células con núcleos en forma de 'halo'",
+                        "Células con citoplasma eosinofílico abundante"
+                    ],
+                    correct: 1,
+                    explanation: "Las células infectadas por el VHS se convierten en multinucleadas y contienen inclusiones viricas intranucleares con una característica imagen en 'vidrio esmerilado', que es patognomónica de esta infección."
+                },
+                {
+                    question: "¿Cuál es la complicación más grave de la infección por VHS genital en mujeres embarazadas?",
+                    options: [
+                        "Desarrollo de cáncer cervical",
+                        "Transmisión al neonato en el nacimiento",
+                        "Infertilidad permanente",
+                        "Desarrollo de enfermedad inflamatoria pélvica"
+                    ],
+                    correct: 1,
+                    explanation: "La consecuencia más grave de la infección por VHS genital es la transmisión al neonato en el nacimiento, especialmente si hay infección activa en el momento del parto, y particularmente si se trata de una primoinfección de la madre."
+                },
+                {
+                    question: "¿Cuál de los siguientes patógenos es considerado la causa principal de vaginosis bacteriana?",
+                    options: [
+                        "Candida albicans",
+                        "Trichomonas vaginalis",
+                        "Gardnerella vaginalis",
+                        "Neisseria gonorrhoeae"
+                    ],
+                    correct: 2,
+                    explanation: "Gardnerella vaginalis es un cocobacilo gramnegativo considerado la causa principal de las vaginosis bacterianas, caracterizadas por secreción vaginal fluida, de color verde grisáceo y maloliente (olor a pescado)."
+                },
+                {
+                    question: "¿Cuál de los siguientes microorganismos está más frecuentemente asociado con partos prematuros?",
+                    options: [
+                        "Virus del herpes simple",
+                        "Chlamydia trachomatis",
+                        "Gardnerella vaginalis",
+                        "Molusco contagioso"
+                    ],
+                    correct: 2,
+                    explanation: "La vaginosis bacteriana causada por Gardnerella vaginalis se ha visto implicada en los partos prematuros en mujeres gestantes, además de otras complicaciones obstétricas."
+                },
+                {
+                    question: "¿Cuál de las siguientes características es típica de la infección por Trichomonas vaginalis?",
+                    options: [
+                        "Secreción vaginal cremosa y prurito intenso",
+                        "Secreción vaginal amarillenta y espumosa con 'cuello de fresa'",
+                        "Lesiones verrugosas en la vulva",
+                        "Úlceras indoloras en la vulva"
+                    ],
+                    correct: 1,
+                    explanation: "Las pacientes con Trichomonas vaginalis pueden referir secreción vaginal amarillenta y espumosa, molestias vulvovaginales, disuria y dispareunia. La mucosa vaginal y cervical adquiere normalmente un color rojo intenso, con dilatación importante de los vasos mucosos cervicales que resultan en la imagen colposcópica característica de 'cuello de fresa'."
+                },
+                {
+                    question: "¿Qué característica histológica es típica del molusco contagioso?",
+                    options: [
+                        "Células multinucleadas con inclusiones intranucleares",
+                        "Células con inclusiones viricas citoplasmáticas",
+                        "Hiperplasia de células escamosas con atipia",
+                        "Infiltrado inflamatorio con neutrófilos predominantes"
+                    ],
+                    correct: 1,
+                    explanation: "El molusco contagioso se caracteriza histológicamente por la presencia de células con inclusiones viricas citoplasmáticas, que se observan como cuerpos eosinofílicos grandes en el citoplasma, conocidos como cuerpos de Henderson-Paterson."
+                },
+                {
+                    question: "¿Cuál de las siguientes afirmaciones sobre la enfermedad inflamatoria pélvica (EIP) es correcta?",
+                    options: [
+                        "Solo es causada por Neisseria gonorrhoeae",
+                        "El endometrio siempre se ve afectado en la infección gonocócica",
+                        "Chlamydia trachomatis es una causa conocida de EIP",
+                        "No puede ocurrir después de procedimientos quirúrgicos"
+                    ],
+                    correct: 2,
+                    explanation: "Chlamydia trachomatis es una causa bien conocida de enfermedad inflamatoria pélvica. La infección puede ascender desde el cuello uterino hasta el útero y las trompas de Falopio, provocando endometritis y salpingitis."
+                },
+                {
+                    question: "En la salpingitis aguda gonocócica, ¿qué característica morfológica es típica?",
+                    options: [
+                        "Luz tubárica dilatada con pliegues edematosos y pus",
+                        "Formación de espacios seudoglandulares por cicatrización",
+                        "Atrofia de los pliegues tubáricos",
+                        "Metaplasia escamosa del epitelio tubárico"
+                    ],
+                    correct: 0,
+                    explanation: "La salpingitis aguda se caracteriza por luz tubárica dilatada, pliegues tubáricos edematosos distendidos por infiltrados de células inflamatorias, y la luz tubárica ocupada por pus."
+                },
+                {
+                    question: "¿Qué complicación crónica es común después de una enfermedad inflamatoria pélvica?",
+                    options: [
+                        "Hipertensión arterial",
+                        "Diabetes mellitus",
+                        "Infertilidad y embarazo ectópico",
+                        "Cáncer de ovario"
+                    ],
+                    correct: 2,
+                    explanation: "Entre las secuelas crónicas de la EIP están la infertilidad y la obstrucción tubárica, el embarazo ectópico, el dolor pélvico y la obstrucción intestinal debida a adherencias entre el intestino y los órganos pélvicos."
+                },
+                {
+                    question: "¿Qué característica diferencia a las infecciones puerperales de las infecciones gonocócicas en cuanto a su propagación?",
+                    options: [
+                        "Las puerperales se propagan por vía hematógena principalmente",
+                        "Las puerperales tienden a afectar más las capas profundas de los órganos",
+                        "Las gonocócicas siempre afectan el endometrio",
+                        "Las gonocócicas no pueden causar abscesos"
+                    ],
+                    correct: 1,
+                    explanation: "Las infecciones bacterianas no gonocócicas que siguen a abortos o partos se propagan al útero a través de canales linfáticos o venosos, no por las superficies mucosas, por lo que tienden a producir más inflamación en las capas profundas de los órganos que las infecciones gonocócicas."
+                },
+                {
+                    question: "¿Qué hallazgo en un frotis vaginal es característico de la candidiasis?",
+                    options: [
+                        "Diplococos gramnegativos intracelulares",
+                        "Parásitos flagelados en movimiento",
+                        "Pseudohifas y esporas de levadura",
+                        "Células con inclusiones citoplasmáticas"
+                    ],
+                    correct: 2,
+                    explanation: "El diagnóstico de candidiasis se establece encontrando las pseudohifas o esporas de la levadura en preparaciones húmedas con KOH de las secreciones, o bien en frotis de Papanicolaou."
+                },
+                {
+                    question: "¿Cuál de los siguientes factores NO aumenta el riesgo de infección sintomática por Candida?",
+                    options: [
+                        "Diabetes mellitus",
+                        "Uso de antibióticos",
+                        "Embarazo",
+                        "Uso de anticonceptivos orales combinados"
+                    ],
+                    correct: 3,
+                    explanation: "Aunque el embarazo aumenta el riesgo de candidiasis, el uso de anticonceptivos orales combinados no se menciona específicamente como factor de riesgo en el texto proporcionado. Los factores mencionados son diabetes mellitus, antibióticos, embarazo y trastornos que afectan a la función de los neutrófilos o los linfocitos Th17."
+                },
+                {
+                    question: "¿Qué serotipo de VHS suele afectar a la mucosa y piel genital?",
+                    options: [
+                        "VHS-1",
+                        "VHS-2",
+                        "VHS-3",
+                        "VHS-4"
+                    ],
+                    correct: 1,
+                    explanation: "El VHS-2 suele afectar a la mucosa y la piel genital, aunque el VHS-1 también puede detectarse en la región genital según las prácticas sexuales."
+                },
+                {
+                    question: "¿Dónde establece latencia el virus del herpes simple después de la infección aguda?",
+                    options: [
+                        "En las células epiteliales de la piel",
+                        "En los ganglios nerviosos lumbosacros regionales",
+                        "En la médula ósea",
+                        "En el hígado"
+                    ],
+                    correct: 1,
+                    explanation: "Durante la infección aguda, el virus migra a los ganglios nerviosos lumbosacros regionales y establece una infección latente, desde donde puede reactivarse posteriormente."
+                },
+                {
+                    question: "¿Qué patógeno puede causar corioamnionitis y parto prematuro?",
+                    options: [
+                        "Ureaplasma urealyticum",
+                        "Virus del molusco contagioso",
+                        "Treponema pallidum",
+                        "Haemophilus ducreyi"
+                    ],
+                    correct: 0,
+                    explanation: "Ureaplasma urealyticum y Mycoplasma hominis son responsables de algunos casos de vaginitis y cervicitis, y han sido implicados en corioamnionitis y parto prematuro en mujeres gestantes."
+                },
+                {
+                    question: "¿Qué característica clínica es típica del molusco contagioso en adultos?",
+                    options: [
+                        "Úlceras dolorosas en la vulva",
+                        "Pápulas perladas en forma de cúpula con centro hundido",
+                        "Placas blancas en la mucosa vaginal",
+                        "Secreción vaginal con olor a pescado"
+                    ],
+                    correct: 1,
+                    explanation: "El diagnóstico del molusco contagioso se basa en el aspecto clínico característico de pápulas perladas, en forma de cúpula, con el centro hundido, que miden 1-5 mm de diámetro."
+                },
+                {
+                    question: "¿Qué complicación aguda puede ocurrir en la enfermedad inflamatoria pélvica?",
+                    options: [
+                        "Peritonitis y bacteriemia",
+                        "Insuficiencia renal aguda",
+                        "Trombosis venosa profunda",
+                        "Neumonía bacteriana"
+                    ],
+                    correct: 0,
+                    explanation: "Las complicaciones agudas de la EIP son peritonitis y bacteriemia, que a su vez pueden producir endocarditis, meningitis y artritis supurativa."
+                },
+                {
+                    question: "¿Qué característica microscópica se observa en el exudado inflamatorio de una infección gonocócica?",
+                    options: [
+                        "Células con inclusiones citoplasmáticas",
+                        "Diplococos gramnegativos fagocitados dentro de neutrófilos",
+                        "Parásitos flagelados",
+                        "Hifas fúngicas"
+                    ],
+                    correct: 1,
+                    explanation: "La infección gonocócica se caracteriza microscópicamente por la presencia de diplococos gramnegativos fagocitados dentro de neutrófilos en los frotis del exudado inflamatorio."
+                }
+            ],
+            vulva: [
+                {
+                    question: "¿Qué estructura se afecta en la formación de un quiste de Bartholin?",
+                    options: [
+                        "Glándula de Skene",
+                        "Glándula de Bartholin",
+                        "Conducto de Gartner",
+                        "Glándulas de Tyson"
+                    ],
+                    correct: 1,
+                    explanation: "El quiste de Bartholin se debe a la obstrucción del conducto de la glándula de Bartholin por un proceso inflamatorio. Estos quistes están revestidos habitualmente por epitelio de transición o escamoso."
+                },
+                {
+                    question: "¿Qué hallazgo histológico es característico del liquen escleroso?",
+                    options: [
+                        "Engrosamiento marcado de la epidermis",
+                        "Adelgazamiento marcado de la epidermis",
+                        "Presencia de células de Paget en la epidermis",
+                        "Hiperplasia de glándulas sudoríparas"
+                    ],
+                    correct: 1,
+                    explanation: "Histológicamente, el liquen escleroso se caracteriza por un adelgazamiento marcado de la epidermis, degeneración de las células epiteliales basales, queratinización excesiva, cambios escleróticos de la dermis superficial y un infiltrado en forma de banda en la dermis subyacente."
+                },
+                {
+                    question: "¿En qué grupo de edad es más frecuente el liquen escleroso?",
+                    options: [
+                        "Mujeres adolescentes",
+                        "Mujeres en edad fértil",
+                        "Mujeres posmenopáusicas",
+                        "Niñas prepuberales"
+                    ],
+                    correct: 2,
+                    explanation: "El liquen escleroso se produce en todos los grupos de edad, pero es más frecuente en mujeres posmenopáusicas."
+                },
+                {
+                    question: "¿Qué tipo de VPH causa principalmente los condilomas acuminados?",
+                    options: [
+                        "Tipos de alto riesgo como VPH-16 y VPH-18",
+                        "Tipos de bajo riesgo como VPH-6 y VPH-11",
+                        "Tipos cutáneos como VPH-1 y VPH-2",
+                        "Tipos de riesgo intermedio como VPH-31 y VPH-33"
+                    ],
+                    correct: 1,
+                    explanation: "Los condilomas acuminados son verrugas genitales benignas causadas por VPH de bajo riesgo, principalmente de los tipos 6 y 11."
+                },
+                {
+                    question: "¿Qué característica histológica es típica de los condilomas acuminados?",
+                    options: [
+                        "Células de Paget en la epidermis",
+                        "Atipia coilocítica con halos perinucleares",
+                        "Adelgazamiento de la epidermis",
+                        "Hiperplasia de glándulas sebáceas"
+                    ],
+                    correct: 1,
+                    explanation: "El epitelio de superficie de los condilomas acuminados muestra las alteraciones citopáticas viricas características, conocidas como atipia coilocítica, que consisten en aumento del tamaño del núcleo, hipercromasia y un halo citoplasmático perinuclear."
+                },
+                {
+                    question: "¿Qué porcentaje aproximado de carcinomas de vulva están relacionados con el VPH?",
+                    options: [
+                        "10%",
+                        "30%",
+                        "50%",
+                        "70%"
+                    ],
+                    correct: 1,
+                    explanation: "Cerca del 30% de los cánceres de vulva están causados por infecciones por VPH de alto riesgo, principalmente VPH-16. Estos corresponden a los carcinomas basaloides y verrugosos que se desarrollan a partir de neoplasia intraepitelial vulvar clásica."
+                },
+                {
+                    question: "¿Qué tipo de carcinoma de vulva es más frecuente y aparece en mujeres de más edad?",
+                    options: [
+                        "Carcinoma basaloides",
+                        "Carcinoma verrugoso",
+                        "Carcinoma epidermoide queratinizante no relacionado con VPH",
+                        "Carcinoma de células claras"
+                    ],
+                    correct: 2,
+                    explanation: "Los carcinomas epidermoides queratinizantes no relacionados con la infección por VPH son más frecuentes (70% de los casos) y aparecen en mujeres de más edad (promedio de 75 años)."
+                },
+                {
+                    question: "¿Qué lesión precursora está asociada con el carcinoma epidermoide queratinizante de vulva?",
+                    options: [
+                        "Neoplasia intraepitelial vulvar clásica",
+                        "Neoplasia intraepitelial vulvar diferenciada",
+                        "Enfermedad de Paget",
+                        "Hiperplasia de células escamosas simple"
+                    ],
+                    correct: 1,
+                    explanation: "El carcinoma epidermoide queratinizante surge sobre una lesión precursora denominada neoplasia intraepitelial vulvar diferenciada, y está más frecuente en mujeres con liquen escleroso o hiperplasia de células escamosas de larga evolución."
+                },
+                {
+                    question: "¿Qué tumor vulvar tiene una contrapartida en la mama y está compuesto por proyecciones papilares revestidas por dos capas de células?",
+                    options: [
+                        "Enfermedad de Paget",
+                        "Hidroadenoma papilar",
+                        "Leiomioma",
+                        "Fibroma"
+                    ],
+                    correct: 1,
+                    explanation: "El hidroadenoma papilar tiene un aspecto histológico idéntico al del papiloma intraductal de la mama, y consiste en proyecciones papilares recubiertas por dos capas de células: una capa superior de células secretoras cilíndricas y una capa más profunda de células mioepiteliales aplanadas."
+                },
+                {
+                    question: "¿Qué característica inmunohistoquímica es típica de las células de Paget en la enfermedad de Paget extramamaria de la vulva?",
+                    options: [
+                        "Expresión de citoqueratina 20",
+                        "Expresión de citoqueratina 7",
+                        "Expresión de factor VIII",
+                        "Expresión de CDX2"
+                    ],
+                    correct: 1,
+                    explanation: "Las células de Paget expresan citoqueratina 7, a diferencia del epitelio escamoso que las rodea. Además, su citoplasma claro contiene mucopolisacáridos y se tiñe con ácido peryódico de Schiff (PAS), azul alciano o mucicarmín."
+                },
+                {
+                    question: "¿Qué porcentaje de pacientes con enfermedad de Paget vulvar tiene un carcinoma subyacente?",
+                    options: [
+                        "Casi el 100%",
+                        "Alrededor del 50%",
+                        "Menos del 10%",
+                        "Ninguna, ya que siempre es intraepitelial"
+                    ],
+                    correct: 2,
+                    explanation: "A diferencia de la enfermedad de Paget del pezón, en la que el 100% de las pacientes tiene un carcinoma ductal de mama subyacente, el Paget vulvar normalmente no está asociado con cáncer y se limita a la epidermis vulvar."
+                },
+                {
+                    question: "¿Qué término clínico describe el engrosamiento epitelial en forma de placas, opaco y blanquecino, que puede tener causas benignas, premalignas o malignas?",
+                    options: [
+                        "Eritroplasia",
+                        "Leucoplasia",
+                        "Melanosis",
+                        "Queratosis"
+                    ],
+                    correct: 1,
+                    explanation: "Leucoplasia es un término clínico para describir el engrosamiento epitelial en forma de placas, opaco y blanquecino, que puede producir prurito y descamación. Puede estar causada por distintos trastornos benignos, premalignos o malignos."
+                },
+                {
+                    question: "¿Qué característica histológica se observa en la hiperplasia de células escamosas?",
+                    options: [
+                        "Adelgazamiento de la epidermis",
+                        "Engrosamiento de la epidermis (acantosis) e hiperqueratosis",
+                        "Presencia de células gigantes multinucleadas",
+                        "Infiltración de la dermis por células atípicas"
+                    ],
+                    correct: 1,
+                    explanation: "La hiperplasia de células escamosas se manifiesta histológicamente por engrosamiento de la epidermis (acantosis) e hiperqueratosis. En ocasiones hay un infiltrado linfocítico en la dermis, pero el epitelio hiperplásico carece de atipia celular."
+                },
+                {
+                    question: "¿Qué factor de riesgo está asociado con la neoplasia intraepitelial vulvar clásica?",
+                    options: [
+                        "Diabetes mellitus",
+                        "Primer coito a edad precoz y múltiples parejas sexuales",
+                        "Uso prolongado de anticonceptivos orales",
+                        "Menarquia tardía"
+                    ],
+                    correct: 1,
+                    explanation: "Los factores de riesgo de VIN clásica son los mismos que los asociados a las lesiones intraepiteliales escamosas cervicales, como primer coito a edad precoz, múltiples parejas sexuales, y pareja masculina con múltiples parejas sexuales, ya que ambas están relacionadas con la infección por VPH."
+                },
+                {
+                    question: "¿Qué mutación genética se ha descrito con frecuencia elevada en la neoplasia intraepitelial vulvar diferenciada?",
+                    options: [
+                        "Mutaciones en BRCA1",
+                        "Mutaciones en TP53",
+                        "Mutaciones en KRAS",
+                        "Mutaciones en PIK3CA"
+                    ],
+                    correct: 1,
+                    explanation: "Algunos investigadores han descrito una frecuencia elevada de mutaciones de TP53 en la VIN diferenciada, lo que apoya la teoría de que la irritación epitelial crónica del liquen escleroso o la hiperplasia de células escamosas podría contribuir a una evolución gradual al fenotipo maligno."
+                },
+                {
+                    question: "¿Cuál es la vía inicial de diseminación metastásica en el carcinoma de vulva?",
+                    options: [
+                        "Vía hematógena a pulmón",
+                        "Vía linfática a ganglios inguinales",
+                        "Diseminación peritoneal",
+                        "Invasión directa a vejiga"
+                    ],
+                    correct: 1,
+                    explanation: "La diseminación inicial del carcinoma de vulva se produce hacia los ganglios inguinales, pélvicos, ilíacos y periaórticos. En último término puede producirse una diseminación hematógena a pulmones, hígado y otros órganos internos."
+                },
+                {
+                    question: "¿Qué pronóstico tienen las pacientes con carcinoma de vulva con lesiones menores de 2 cm de diámetro?",
+                    options: [
+                        "Supervivencia a 5 años del 30%",
+                        "Supervivencia a 5 años del 60%",
+                        "Supervivencia a 5 años del 90%",
+                        "Supervivencia a 5 años del 100%"
+                    ],
+                    correct: 2,
+                    explanation: "Las pacientes con lesiones menores de 2 cm de diámetro tienen una supervivencia a los 5 años del 90%, con tratamiento mediante vulvectomía y linfoadenectomía."
+                },
+                {
+                    question: "¿Qué característica ultraestructural muestran las células de Paget?",
+                    options: [
+                        "Diferenciación neuroendocrina",
+                        "Diferenciación apocrina, ecrina y de queratinocitos",
+                        "Diferenciación melanocítica",
+                        "Diferenciación mioepitelial exclusiva"
+                    ],
+                    correct: 1,
+                    explanation: "La ultraestructura de las células de Paget muestra diferenciación apocrina, ecrina y de queratinocitos, y presumiblemente se origina a partir de células multipotentes presentes en los conductos glandulares similares a los mamarios de la piel vulvar."
+                },
+                {
+                    question: "¿Qué tratamiento se recomienda para la enfermedad de Paget vulvar?",
+                    options: [
+                        "Terapia tópica con corticosteroides",
+                        "Resección local amplia",
+                        "Radioterapia exclusiva",
+                        "Quimioterapia sistémica"
+                    ],
+                    correct: 1,
+                    explanation: "El tratamiento consiste en una resección local amplia, necesaria porque las células de Paget se extienden lateralmente dentro de la epidermis y pueden estar presentes más allá de los bordes de la lesión visible macroscópicamente."
+                },
+                {
+                    question: "¿Qué característica histológica distingue a la neoplasia intraepitelial vulvar diferenciada?",
+                    options: [
+                        "Células inmaduras en todo el espesor del epitelio",
+                        "Atipia notable de la capa basal con diferenciación normal en capas superficiales",
+                        "Presencia de células multinucleadas con inclusiones virales",
+                        "Hiperplasia glandular con atipia"
+                    ],
+                    correct: 1,
+                    explanation: "La VIN diferenciada está marcada por una atipia notable de la capa basal del epitelio escamoso y diferenciación de aspecto normal de las capas más superficiales, a diferencia de la VIN clásica que muestra atipia en todo el espesor epitelial."
+                }
+            ],
+            vagina: [
+                {
+                    question: "¿Qué anomalía del desarrollo vaginal se asocia con útero didelfo?",
+                    options: [
+                        "Vagina tabicada o doble",
+                        "Agenesia vaginal",
+                        "Vagina transversa",
+                        "Microvagina"
+                    ],
+                    correct: 0,
+                    explanation: "La vagina tabicada, o doble, es una anomalía infrecuente debida a la ausencia de fusión de un conducto de Müller, y se acompaña de un útero doble (útero didelfo)."
+                },
+                {
+                    question: "¿Qué condición se asocia con la exposición intrauterina al dietilestilbestrol (DES)?",
+                    options: [
+                        "Quiste de Gartner",
+                        "Adenosis vaginal",
+                        "Hidrosalpinx",
+                        "Endometriosis vaginal"
+                    ],
+                    correct: 1,
+                    explanation: "La adenosis vaginal, que consiste en la persistencia de epitelio glandular residual en la vagina, se ha descrito en el 35-90% de las mujeres expuestas al DES in utero."
+                },
+                {
+                    question: "¿De qué estructura embrionaria derivan los quistes del conducto de Gartner?",
+                    options: [
+                        "Conducto de Müller",
+                        "Conducto de Wolff (mesonéfrico)",
+                        "Senos urogenitales",
+                        "Cresta gonadal"
+                    ],
+                    correct: 1,
+                    explanation: "Los quistes del conducto de Gartner son lesiones relativamente frecuentes encontradas en las paredes laterales de la vagina que derivan de restos del conducto de Wolff (mesonéfrico)."
+                },
+                {
+                    question: "¿Qué tipo de carcinoma es el más frecuente en la vagina?",
+                    options: [
+                        "Carcinoma epidermoide primario",
+                        "Carcinoma que se extiende desde el cérvix",
+                        "Carcinoma de células claras",
+                        "Rabdomiosarcoma embrionario"
+                    ],
+                    correct: 1,
+                    explanation: "El tumor maligno que con más frecuencia afecta a la vagina es el carcinoma que se extiende desde el cérvix, seguido del carcinoma epidermoide primario de vagina."
+                },
+                {
+                    question: "¿Qué factor de riesgo es el más importante para el desarrollo de carcinoma epidermoide vaginal?",
+                    options: [
+                        "Tabaquismo",
+                        "Cáncer previo del cérvix o la vulva",
+                        "Uso de dispositivos intrauterinos",
+                        "Menarquia precoz"
+                    ],
+                    correct: 1,
+                    explanation: "El factor de riesgo mayor para el carcinoma epidermoide vaginal es un carcinoma previo del cérvix o la vulva; el 1-2% de las mujeres con carcinoma cervical invasivo desarrollan un carcinoma epidermoide vaginal."
+                },
+                {
+                    question: "¿Qué tipo de VPH está asociado con el carcinoma epidermoide vaginal?",
+                    options: [
+                        "VPH de bajo riesgo (tipos 6 y 11)",
+                        "VPH de alto riesgo",
+                        "VPH cutáneo (tipos 1 y 2)",
+                        "No hay asociación con VPH"
+                    ],
+                    correct: 1,
+                    explanation: "Casi todos los carcinomas primarios de la vagina son carcinomas epidermoides asociados a infecciones por el VPH de alto riesgo, similar a lo que ocurre en el cérvix y la vulva."
+                },
+                {
+                    question: "¿En qué grupo etario aparece con más frecuencia el rabdomiosarcoma embrionario vaginal?",
+                    options: [
+                        "Adolescentes",
+                        "Mujeres en edad fértil",
+                        "Mujeres posmenopáusicas",
+                        "Lactantes y niñas menores de 5 años"
+                    ],
+                    correct: 3,
+                    explanation: "El rabdomiosarcoma embrionario (sarcoma botrioideo) aparece con más frecuencia en lactantes y niñas menores de 5 años, y es un tumor vaginal infrecuente pero característico de este grupo etario."
+                },
+                {
+                    question: "¿Qué apariencia macroscópica tiene el rabdomiosarcoma embrionario vaginal?",
+                    options: [
+                        "Úlcera irregular y sangrante",
+                        "Masa polipoidea con aspecto de racimo de uvas",
+                        "Placa blanquecina y engrosada",
+                        "Nódulo pigmentado con bordes irregulares"
+                    ],
+                    correct: 1,
+                    explanation: "Estos tumores suelen crecer en forma de masas polipoideas, redondeadas y voluminosas que tienen el aspecto y la consistencia de racimos de uvas (por esto se denominan botrioideos, o similares a uvas)."
+                },
+                {
+                    question: "¿Qué característica histológica es típica de las células tumorales en el rabdomiosarcoma embrionario?",
+                    options: [
+                        "Células grandes con citoplasma claro y núcleos en herradura",
+                        "Células pequeñas con núcleos ovales y protrusiones de citoplasma en forma de raqueta de tenis",
+                        "Células gigantes multinucleadas con inclusiones virales",
+                        "Células epiteliales con atipia coilocítica"
+                    ],
+                    correct: 1,
+                    explanation: "Las células tumorales del rabdomiosarcoma embrionario son pequeñas, tienen núcleos ovales, con unas discretas protrusiones de citoplasma en un extremo, que les confieren un aspecto de raqueta de tenis."
+                },
+                {
+                    question: "¿Qué capa característica se observa debajo del epitelio vaginal en el rabdomiosarcoma embrionario?",
+                    options: [
+                        "Capa granulosa",
+                        "Capa cambial",
+                        "Capa basal",
+                        "Capa espinosa"
+                    ],
+                    correct: 1,
+                    explanation: "Por debajo del epitelio vaginal, las células tumorales son muy abundantes en una capa denominada cambial, pero en las regiones profundas se sitúan en un estroma fibromixoide edematoso laxo."
+                },
+                {
+                    question: "¿Qué complicación grave puede causar el rabdomiosarcoma embrionario vaginal?",
+                    options: [
+                        "Metástasis a ganglios axilares",
+                        "Penetración a cavidad peritoneal u obstrucción de vías urinarias",
+                        "Diseminación hematógena a huesos",
+                        "Compromiso del sistema nervioso central"
+                    ],
+                    correct: 1,
+                    explanation: "Estos tumores tienden a invadir localmente y causar el fallecimiento por penetración a la cavidad peritoneal o por obstrucción de las vías urinarias."
+                },
+                {
+                    question: "¿Qué tipo de tratamiento ofrece mejores resultados para el rabdomiosarcoma embrionario?",
+                    options: [
+                        "Radioterapia exclusiva",
+                        "Cirugía radical con exenteración pélvica",
+                        "Cirugía conservadora unida a quimioterapia",
+                        "Terapia hormonal"
+                    ],
+                    correct: 2,
+                    explanation: "La cirugía conservadora unida a quimioterapia ofrece los mejores resultados para el rabdomiosarcoma embrionario, especialmente en casos diagnosticados de forma precoz."
+                },
+                {
+                    question: "¿Qué tipo de tumor benigno es más frecuente en la vagina en mujeres en edad fértil?",
+                    options: [
+                        "Pólipos estromales",
+                        "Leiomiomas",
+                        "Hemangiomas",
+                        "Todos los anteriores"
+                    ],
+                    correct: 3,
+                    explanation: "La mayoría de los tumores benignos de la vagina aparecen en mujeres de edad fértil y comprenden tumores estromales (pólipos estromales), leiomiomas y hemangiomas."
+                },
+                {
+                    question: "¿Qué área de la vagina es más frecuentemente afectada por el carcinoma epidermoide primario?",
+                    options: [
+                        "Tercio inferior",
+                        "Tercio medio",
+                        "Parte superior, especialmente pared posterior",
+                        "Fornix anterior"
+                    ],
+                    correct: 2,
+                    explanation: "Con más frecuencia, el tumor invasivo afecta a la parte superior de la vagina, especialmente la pared posterior en la unión con el ectocérvix."
+                },
+                {
+                    question: "¿A qué ganglios drenan las lesiones de los dos tercios inferiores de la vagina?",
+                    options: [
+                        "Ganglios ilíacos",
+                        "Ganglios inguinales",
+                        "Ganglios periaórticos",
+                        "Ganglios axilares"
+                    ],
+                    correct: 1,
+                    explanation: "Las lesiones de los dos tercios inferiores de la vagina metastatizan a los ganglios inguinales, mientras que las de la parte superior tienden a diseminarse a los ganglios ilíacos regionales."
+                },
+                {
+                    question: "¿Qué tipo de cáncer se ha desarrollado a partir de adenosis relacionada con DES en adolescentes y mujeres jóvenes?",
+                    options: [
+                        "Carcinoma epidermoide",
+                        "Carcinoma de células claras",
+                        "Carcinoma seroso",
+                        "Carcinoma mucinoso"
+                    ],
+                    correct: 1,
+                    explanation: "Entre la década de los setenta y la de los ochenta se detectaron unos pocos casos de carcinoma de células claras desarrollados a partir de adenosis relacionada con DES en adolescentes y mujeres adultas jóvenes, lo que llevó a la suspensión del DES."
+                },
+                {
+                    question: "¿Qué característica microscópica tiene la adenosis vaginal?",
+                    options: [
+                        "Epitelio escamoso con atipia",
+                        "Epitelio mucinoso cilíndrico indistinguible del endocérvix",
+                        "Epitelio transicional similar al de vejiga",
+                        "Epitelio cuboideo con metaplasia escamosa"
+                    ],
+                    correct: 1,
+                    explanation: "Al examen microscópico, la adenosis consiste en epitelio mucinoso cilíndrico indistinguible del endocérvix, que puede persistir como pequeñas lagunas de epitelio glandular residual en la vida adulta."
+                },
+                {
+                    question: "¿Qué estructura embrionaria da origen inicialmente al epitelio vaginal?",
+                    options: [
+                        "Epitelio escamoso del seno urogenital",
+                        "Epitelio cilíndrico de tipo endocervical de los conductos de Müller",
+                        "Epitelio transicional del conducto de Wolff",
+                        "Epitelio cuboideo de la cresta urogenital"
+                    ],
+                    correct: 1,
+                    explanation: "En el desarrollo embrionario, la vagina está recubierta inicialmente por epitelio cilíndrico de tipo endocervical. Este se sustituye normalmente por epitelio escamoso, que asciende desde el seno urogenital."
+                },
+                {
+                    question: "¿Cuál es la incidencia aproximada del carcinoma primario de vagina?",
+                    options: [
+                        "6 por 100,000 mujeres al año",
+                        "0.6 por 100,000 mujeres al año",
+                        "60 por 100,000 mujeres al año",
+                        "0.06 por 100,000 mujeres al año"
+                    ],
+                    correct: 1,
+                    explanation: "El carcinoma vaginal es absolutamente excepcional (cerca de 0.6 por 100,000 mujeres al año) y representa aproximadamente el 1% de todas las neoplasias malignas del aparato genital femenino."
+                },
+                {
+                    question: "¿Qué lesión precursora del carcinoma epidermoide vaginal es análoga a las lesiones intraepiteliales escamosas cervicales?",
+                    options: [
+                        "Neoplasia intraepitelial vaginal",
+                        "Adenosis vaginal",
+                        "Metaplasia escamosa",
+                        "Hiperplasia glandular"
+                    ],
+                    correct: 0,
+                    explanation: "El carcinoma epidermoide vaginal se origina sobre una lesión premaligna, la neoplasia intraepitelial vaginal, análoga a las lesiones intraepiteliales escamosas cervicales (SIL)."
+                }
+            ]
+        };
+
+        // Variables del estado del examen
+        let currentUnit = "";
+        let currentMode = "practice";
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let studentName = "";
+        let score = 0;
+
+        // Elementos del DOM
+        const initialScreen = document.getElementById("initial-screen");
+        const studentNameInput = document.getElementById("student-name");
+        const unitSelector = document.getElementById("unit-selector");
+        const modeSelector = document.getElementById("mode-selector");
+        const startBtn = document.getElementById("start-btn");
+        const questionContainer = document.getElementById("question-container");
+        const questionNumber = document.getElementById("question-number");
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const explanation = document.getElementById("explanation");
+        const prevBtn = document.getElementById("prev-btn");
+        const nextBtn = document.getElementById("next-btn");
+        const submitBtn = document.getElementById("submit-btn");
+        const progressBar = document.getElementById("progress-bar");
+        const progressText = document.getElementById("progress-text");
+        const resultsContainer = document.getElementById("results-container");
+        const resultStudentName = document.getElementById("result-student-name");
+        const resultUnit = document.getElementById("result-unit");
+        const resultMode = document.getElementById("result-mode");
+        const resultScore = document.getElementById("result-score");
+        const correctCount = document.getElementById("correct-count");
+        const reviewAnswers = document.getElementById("review-answers");
+        const retryBtn = document.getElementById("retry-btn");
+        const exitBtn = document.getElementById("exit-btn");
+
+        // Event Listeners
+        startBtn.addEventListener("click", startExam);
+        prevBtn.addEventListener("click", goToPreviousQuestion);
+        nextBtn.addEventListener("click", handleNextOrSubmit);
+        submitBtn.addEventListener("click", submitExam);
+        retryBtn.addEventListener("click", restartExam);
+        exitBtn.addEventListener("click", exitExam);
+
+        // Función para iniciar el examen
+        function startExam() {
+            studentName = studentNameInput.value.trim();
+            currentUnit = unitSelector.value;
+            currentMode = modeSelector.value;
+
+            if (!studentName) {
+                alert("Por favor, ingresa tu nombre o correo electrónico.");
+                return;
+            }
+
+            if (!currentUnit) {
+                alert("Por favor, selecciona una unidad.");
+                return;
+            }
+
+            // Inicializar variables
+            currentQuestionIndex = 0;
+            userAnswers = new Array(questionBank[currentUnit].length).fill(-1);
+            score = 0;
+
+            // Ocultar pantalla inicial y mostrar contenedor de preguntas
+            initialScreen.style.display = "none";
+            questionContainer.style.display = "block";
+            resultsContainer.style.display = "none";
+
+            // Cargar la primera pregunta
+            loadQuestion(currentQuestionIndex);
+        }
+
+        // Función para cargar una pregunta
+        function loadQuestion(index) {
+            const questions = questionBank[currentUnit];
+            const question = questions[index];
+
+            // Actualizar número de pregunta
+            questionNumber.textContent = `Pregunta ${index + 1} de ${questions.length}`;
+            questionText.textContent = question.question;
+
+            // Limpiar opciones anteriores
+            optionsContainer.innerHTML = "";
+
+            // Crear opciones
+            question.options.forEach((option, i) => {
+                const optionElement = document.createElement("div");
+                optionElement.className = "option";
+                optionElement.textContent = option;
+                optionElement.dataset.index = i;
+
+                // Si ya se ha respondido esta pregunta, marcar la opción seleccionada
+                if (userAnswers[index] === i) {
+                    optionElement.classList.add("selected");
+                }
+
+                optionElement.addEventListener("click", () => {
+                    // Quitar la clase 'selected' de todas las opciones
+                    document.querySelectorAll(".option").forEach(opt => {
+                        opt.classList.remove("selected");
+                    });
+
+                    // Añadir la clase 'selected' a la opción clicada
+                    optionElement.classList.add("selected");
+
+                    // Guardar la respuesta
+                    userAnswers[index] = i;
+
+                    // Si estamos en modo práctica, mostrar la explicación
+                    if (currentMode === "practice") {
+                        showExplanation(index);
+                    } else {
+                        explanation.style.display = "none";
+                    }
+
+                    // Habilitar/deshabilitar botones según la posición
+                    updateNavigationButtons();
+                });
+
+                optionsContainer.appendChild(optionElement);
+            });
+
+            // Actualizar barra de progreso
+            const progress = ((index + 1) / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${userAnswers.filter(answer => answer !== -1).length} de ${questions.length} preguntas completadas`;
+
+            // Ocultar explicación al cargar una nueva pregunta (excepto en modo práctica si ya se respondió)
+            if (currentMode !== "practice" || userAnswers[index] === -1) {
+                explanation.style.display = "none";
+            } else {
+                showExplanation(index);
+            }
+
+            // Actualizar botones de navegación
+            updateNavigationButtons();
+        }
+
+        // Función para mostrar la explicación
+        function showExplanation(index) {
+            const questions = questionBank[currentUnit];
+            const question = questions[index];
+            const userAnswer = userAnswers[index];
+
+            if (userAnswer === -1) {
+                explanation.style.display = "none";
+                return;
+            }
+
+            explanation.textContent = question.explanation;
+            explanation.style.display = "block";
+
+            // Quitar clases de correct/incorrect de todas las opciones
+            document.querySelectorAll(".option").forEach(opt => {
+                opt.classList.remove("correct", "incorrect");
+            });
+
+            // Marcar la respuesta correcta e incorrecta
+            const options = document.querySelectorAll(".option");
+            options.forEach((opt, i) => {
+                if (i === question.correct) {
+                    opt.classList.add("correct");
+                } else if (i === userAnswer && userAnswer !== question.correct) {
+                    opt.classList.add("incorrect");
+                }
+            });
+        }
+
+        // Función para actualizar los botones de navegación
+        function updateNavigationButtons() {
+            const questions = questionBank[currentUnit];
+            
+            prevBtn.disabled = currentQuestionIndex === 0;
+            nextBtn.disabled = false; // Siempre habilitado si hay respuesta
+
+            // Mostrar el botón de enviar solo en la última pregunta en modo examen
+            if (currentMode === "exam" && currentQuestionIndex === questions.length - 1) {
+                nextBtn.style.display = "none";
+                submitBtn.style.display = "block";
+            } else {
+                nextBtn.style.display = "block";
+                submitBtn.style.display = "none";
+            }
+        }
+
+        // Manejador para el botón "Siguiente" o "Enviar Respuestas"
+        function handleNextOrSubmit() {
+            const questions = questionBank[currentUnit];
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                goToNextQuestion();
+            } else {
+                submitExam();
+            }
+        }
+
+        // Función para ir a la pregunta anterior
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        // Función para ir a la siguiente pregunta
+        function goToNextQuestion() {
+            const questions = questionBank[currentUnit];
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion(currentQuestionIndex);
+            }
+        }
+
+        // Función para enviar el examen
+        function submitExam() {
+            calculateScore();
+            showResults();
+            // Exportar automáticamente a Google Sheets
+            exportToGoogleSheets();
+        }
+
+        // Función para calcular la puntuación
+        function calculateScore() {
+            const questions = questionBank[currentUnit];
+            let correctAnswers = 0;
+
+            for (let i = 0; i < questions.length; i++) {
+                if (userAnswers[i] === questions[i].correct) {
+                    correctAnswers++;
+                }
+            }
+
+            score = (correctAnswers / questions.length) * 100;
+        }
+
+        // Función para mostrar los resultados
+        function showResults() {
+            questionContainer.style.display = "none";
+            resultsContainer.style.display = "block";
+
+            // Rellenar la información del resultado
+            resultStudentName.textContent = studentName;
+            resultUnit.textContent = getUnitName(currentUnit);
+            resultMode.textContent = currentMode === "practice" ? "Práctica" : "Examen";
+            resultScore.textContent = `${score.toFixed(2)}%`;
+            correctCount.textContent = `${userAnswers.filter((answer, index) => answer === questionBank[currentUnit][index].correct).length} de 20`;
+
+            // Generar la revisión de respuestas
+            generateReview();
+        }
+
+        // Función para obtener el nombre de la unidad
+        function getUnitName(unitKey) {
+            const unitNames = {
+                "infecciones": "Infecciones del Aparato Genital Femenino",
+                "vulva": "Vulva",
+                "vagina": "Vagina"
+            };
+            return unitNames[unitKey] || unitKey;
+        }
+
+        // Función para generar la revisión de respuestas
+        function generateReview() {
+            reviewAnswers.innerHTML = "";
+            const questions = questionBank[currentUnit];
+
+            questions.forEach((question, index) => {
+                const answerItem = document.createElement("div");
+                answerItem.style.marginBottom = "15px";
+                answerItem.style.padding = "10px";
+                answerItem.style.border = "1px solid #ddd";
+                answerItem.style.borderRadius = "5px";
+
+                const userAnswer = userAnswers[index];
+                const isCorrect = userAnswer === question.correct;
+
+                answerItem.innerHTML = `
+                    <p><strong>Pregunta ${index + 1}:</strong> ${question.question}</p>
+                    <p><strong>Tu respuesta:</strong> ${userAnswer !== -1 ? question.options[userAnswer] : "No respondida"} 
+                        ${isCorrect ? '<span style="color: green;">✓</span>' : '<span style="color: red;">✗</span>'}</p>
+                    <p><strong>Respuesta correcta:</strong> ${question.options[question.correct]}</p>
+                    <p><strong>Explicación:</strong> ${question.explanation}</p>
+                `;
+
+                reviewAnswers.appendChild(answerItem);
+            });
+        }
+
+        // Función para exportar a Google Sheets (IMPLEMENTACIÓN REAL)
+        async function exportToGoogleSheets() {
+            const correctAnswers = userAnswers.filter((answer, index) => answer === questionBank[currentUnit][index].correct).length;
+
+            const formData = {
+                studentName: studentName,
+                unit: currentUnit,
+                mode: currentMode,
+                score: score.toFixed(2),
+                correctCount: correctAnswers
+            };
+
+            try {
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    body: JSON.stringify(formData),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+
+                if (result.result === 'success') {
+                    console.log('Resultados exportados correctamente a Google Sheets');
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('Error al exportar:', error);
+                // No mostramos alerta al usuario para no interrumpir la experiencia
+                // El error se registra en consola para depuración
+            }
+        }
+
+        // Función para reiniciar el examen
+        function restartExam() {
+            // Reiniciar variables
+            currentQuestionIndex = 0;
+            userAnswers = new Array(questionBank[currentUnit].length).fill(-1);
+            score = 0;
+
+            // Ocultar resultados y mostrar contenedor de preguntas
+            resultsContainer.style.display = "none";
+            questionContainer.style.display = "block";
+
+            // Cargar la primera pregunta
+            loadQuestion(currentQuestionIndex);
+        }
+
+        // Función para salir del cuestionario
+        function exitExam() {
+            // Reiniciar todo
+            currentUnit = "";
+            currentMode = "practice";
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            studentName = "";
+            score = 0;
+
+            // Mostrar pantalla inicial y ocultar todo lo demás
+            initialScreen.style.display = "block";
+            questionContainer.style.display = "none";
+            resultsContainer.style.display = "none";
+
+            // Resetear los campos del formulario
+            studentNameInput.value = "";
+            unitSelector.selectedIndex = 0;
+            modeSelector.selectedIndex = 0;
+
+            // Resetear barra de progreso
+            progressBar.style.width = "0%";
+            progressText.textContent = "0/0 preguntas completadas";
+        }
+    </script>
+</body>
+</html>
